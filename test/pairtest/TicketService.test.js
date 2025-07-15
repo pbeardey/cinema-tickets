@@ -59,6 +59,12 @@ const generate = (...params) => {
   };
 };
 
+const expectError = (error, errorMessage, logMessage) => {
+  expect(error).toBeInstanceOf(InvalidPurchaseException);
+  expect(error.message).toEqual(errorMessage);
+  expectLog('error')(logMessage);
+};
+
 const expectedSeatsAndPayment = (accountId, seatCount, cost) => {
   expect(mockReserveSeat).toHaveBeenCalledWith(accountId, seatCount);
   expectLog()('Seats reserved.', { seats_reserved: seatCount }, 1);
@@ -83,9 +89,9 @@ describe('TicketService', () => {
       try {
         ticketService.purchaseTickets(accountId);
       } catch (error) {
-        expect(error).toBeInstanceOf(InvalidPurchaseException);
-        expect(error.message).toEqual('Account Id must be a positive integer.');
-        expectLog('error')(
+        expectError(
+          error,
+          'Account Id must be a positive integer.',
           'Account Id provided was not an integer greater than 0.',
         );
       }
@@ -97,11 +103,11 @@ describe('TicketService', () => {
     try {
       ticketService.purchaseTickets(1);
     } catch (error) {
-      expect(error).toBeInstanceOf(InvalidPurchaseException);
-      expect(error.message).toEqual(
+      expectError(
+        error,
         'A least one ticket type must be requested.',
+        'Ticket type request is missing.',
       );
-      expectLog('error')('Ticket type request is missing.');
     }
     expect.assertions(3);
   });
@@ -110,9 +116,9 @@ describe('TicketService', () => {
     try {
       ticketService.purchaseTickets(1, {});
     } catch (error) {
-      expect(error).toBeInstanceOf(InvalidPurchaseException);
-      expect(error.message).toEqual('Ticket type request is not recognised.');
-      expectLog('error')(
+      expectError(
+        error,
+        'Ticket type request is not recognised.',
         'Ticket type request is not of type ticketTypeRequest.',
       );
     }
@@ -160,9 +166,9 @@ describe('TicketService', () => {
         invalidTicketRequest,
       );
     } catch (error) {
-      expect(error).toBeInstanceOf(InvalidPurchaseException);
-      expect(error.message).toEqual('Ticket type request is not recognised.');
-      expectLog('error')(
+      expectError(
+        error,
+        'Ticket type request is not recognised.',
         'Ticket type request is not of type ticketTypeRequest.',
       );
     }
@@ -205,11 +211,11 @@ describe('TicketService', () => {
     try {
       ticketService.purchaseTickets(1, ...requests);
     } catch (error) {
-      expect(error).toBeInstanceOf(InvalidPurchaseException);
-      expect(error.message).toEqual(
+      expectError(
+        error,
         'A minimum of one adult ticket is required.',
+        'No adult ticket was requested.',
       );
-      expectLog('error')('No adult ticket was requested.');
     }
     expect.assertions(3);
   });
@@ -220,11 +226,11 @@ describe('TicketService', () => {
     try {
       ticketService.purchaseTickets(1, ...requests);
     } catch (error) {
-      expect(error).toBeInstanceOf(InvalidPurchaseException);
-      expect(error.message).toEqual(
+      expectError(
+        error,
         'A minimum of one adult ticket per infant ticket is required.',
+        'More adults than infants were requested.',
       );
-      expectLog('error')('More adults than infants were requested.');
     }
     expect.assertions(3);
   });
@@ -235,9 +241,11 @@ describe('TicketService', () => {
     try {
       ticketService.purchaseTickets(1, ...requests);
     } catch (error) {
-      expect(error).toBeInstanceOf(InvalidPurchaseException);
-      expect(error.message).toEqual('A maximum of 25 tickets are permitted.');
-      expectLog('error')('More than 25 tickets were requested.');
+      expectError(
+        error,
+        'A maximum of 25 tickets are permitted.',
+        'More than 25 tickets were requested.',
+      );
     }
     expect.assertions(3);
   });
