@@ -6,15 +6,21 @@ import SeatReservationService from '../thirdparty/seatbooking/SeatReservationSer
 
 export default class TicketService {
   #requestId;
-  #accountId;
-  #ticketTypeRequests;
 
   purchaseTickets(accountId, ...ticketTypeRequests) {
     this.#requestId = randomUUID();
-    this.#accountId = accountId;
-    this.#ticketTypeRequests = ticketTypeRequests;
 
-    if (!Number.isInteger(this.#accountId) || this.#accountId < 1) {
+    this.#validateAccountId(accountId);
+
+    this.#validateTicketTypeRequest(ticketTypeRequests);
+
+    const seatReservationService = new SeatReservationService();
+    seatReservationService.reserveSeat(1, 1);
+    this.#log().info('Seats reserved.', { seats_reserved: 1 });
+  }
+
+  #validateAccountId = (accountId) => {
+    if (!Number.isInteger(accountId) || accountId < 1) {
       this.#log().error(
         'Account Id provided was not an integer greater than 0.',
       );
@@ -22,15 +28,17 @@ export default class TicketService {
         'Account Id must be a positive integer.',
       );
     }
+  };
 
-    if (this.#ticketTypeRequests.length === 0) {
+  #validateTicketTypeRequest = (ticketTypeRequests) => {
+    if (ticketTypeRequests.length === 0) {
       this.#log().error('Ticket type request is missing.');
       throw new InvalidPurchaseException(
         'A least one ticket type must be requested.',
       );
     }
 
-    if (!(this.#ticketTypeRequests[0] instanceof TicketTypeRequest)) {
+    if (!(ticketTypeRequests[0] instanceof TicketTypeRequest)) {
       this.#log().error(
         'Ticket type request is not of type ticketTypeRequest.',
       );
@@ -38,11 +46,7 @@ export default class TicketService {
         'Ticket type request is not recognised.',
       );
     }
-
-    const seatReservationService = new SeatReservationService();
-    seatReservationService.reserveSeat(1, 1);
-    this.#log().info('Seats reserved.', { seats_reserved: 1 });
-  }
+  };
 
   #log = () => {
     const _logger = (level, message, extras) => {
