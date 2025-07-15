@@ -136,4 +136,16 @@ describe('TicketService', () => {
     }
     expect.assertions(3);
   });
+
+  it('reserves seats and makes payment for multiple adults from multiple requests', () => {
+    const adultTicketRequest = new TicketTypeRequest('ADULT', 1);
+
+    ticketService.purchaseTickets(1, adultTicketRequest, adultTicketRequest);
+
+    expect(mockReserveSeat).toHaveBeenCalledWith(1, 2);
+    expectLog()('Seats reserved.', { seats_reserved: 2 }, 1);
+
+    expect(mockMakePayment).toHaveBeenCalledWith(1, 50);
+    expectLog()('Payment made.', { cost: 50 }, 2);
+  });
 });
