@@ -31,6 +31,26 @@ const expectLog = (level = 'info') => {
   };
 };
 
+const generateRequests = (...params) => {
+  const type = ['ADULT', 'CHILD', 'INFANT'];
+  const requests = [];
+  params.forEach((param, index) => {
+    if (param > 0) {
+      const request = new TicketTypeRequest(type[index], param);
+      requests.push(request);
+    }
+  });
+  return requests;
+};
+
+const expectedSeatsAndPayment = (accountId, seatCount, cost) => {
+  expect(mockReserveSeat).toHaveBeenCalledWith(accountId, seatCount);
+  expectLog()('Seats reserved.', { seats_reserved: seatCount }, 1);
+
+  expect(mockMakePayment).toHaveBeenCalledWith(accountId, cost);
+  expectLog()('Payment made.', { cost: cost }, 2);
+};
+
 describe('TicketService', () => {
   let ticketService;
   beforeEach(() => {
@@ -108,11 +128,7 @@ describe('TicketService', () => {
 
       ticketService.purchaseTickets(accountId, adultTicketRequest);
 
-      expect(mockReserveSeat).toHaveBeenCalledWith(accountId, noOfAdults);
-      expectLog()('Seats reserved.', { seats_reserved: noOfAdults }, 1);
-
-      expect(mockMakePayment).toHaveBeenCalledWith(accountId, expectedCost);
-      expectLog()('Payment made.', { cost: expectedCost }, 2);
+      expectedSeatsAndPayment(accountId, noOfAdults, expectedCost);
     },
   );
 
@@ -142,42 +158,18 @@ describe('TicketService', () => {
 
     ticketService.purchaseTickets(1, adultTicketRequest, adultTicketRequest);
 
-    expect(mockReserveSeat).toHaveBeenCalledWith(1, 2);
-    expectLog()('Seats reserved.', { seats_reserved: 2 }, 1);
-
-    expect(mockMakePayment).toHaveBeenCalledWith(1, 50);
-    expectLog()('Payment made.', { cost: 50 }, 2);
+    expectedSeatsAndPayment(1, 2, 50);
   });
 
   it('reserves seats and makes payment for adult and child requests', () => {
-    const adultTicketRequest = new TicketTypeRequest('ADULT', 1);
-    const childTicketRequest = new TicketTypeRequest('CHILD', 1);
+    ticketService.purchaseTickets(1, ...generateRequests(1, 1));
 
-    ticketService.purchaseTickets(1, adultTicketRequest, childTicketRequest);
-
-    expect(mockReserveSeat).toHaveBeenCalledWith(1, 2);
-    expectLog()('Seats reserved.', { seats_reserved: 2 }, 1);
-
-    expect(mockMakePayment).toHaveBeenCalledWith(1, 40);
-    expectLog()('Payment made.', { cost: 40 }, 2);
+    expectedSeatsAndPayment(1, 2, 40);
   });
 
   it('reserves seats and makes payment for adult, child and infant requests', () => {
-    const adultTicketRequest = new TicketTypeRequest('ADULT', 2);
-    const childTicketRequest = new TicketTypeRequest('CHILD', 3);
-    const infantTicketRequest = new TicketTypeRequest('INFANT', 1);
+    ticketService.purchaseTickets(1, ...generateRequests(2, 3, 1));
 
-    ticketService.purchaseTickets(
-      1,
-      adultTicketRequest,
-      childTicketRequest,
-      infantTicketRequest,
-    );
-
-    expect(mockReserveSeat).toHaveBeenCalledWith(1, 6);
-    expectLog()('Seats reserved.', { seats_reserved: 6 }, 1);
-
-    expect(mockMakePayment).toHaveBeenCalledWith(1, 95);
-    expectLog()('Payment made.', { cost: 95 }, 2);
+    expectedSeatsAndPayment(1, 6, 95);
   });
 });
