@@ -88,8 +88,10 @@ export default class TicketService {
       );
     }
 
-    const totalTickets =
-      ticketTally.ADULT + ticketTally.CHILD + ticketTally.INFANT;
+    let totalTickets = 0;
+    for (const type in ticketTally) {
+      totalTickets = totalTickets + ticketTally[type];
+    }
     if (totalTickets > 25) {
       this.#log().error('More than 25 tickets were requested.');
       throw new InvalidPurchaseException(
