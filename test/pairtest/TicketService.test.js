@@ -6,11 +6,18 @@ import crypto from 'crypto';
 jest.spyOn(crypto, 'randomUUID').mockReturnValue('some-request-id');
 
 describe('TicketService', () => {
+  let ticketService;
+  beforeEach(() => {
+    ticketService = new TicketService();
+  });
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it.each([['x'], [1.5], [-2], [true]])(
     'throws error when accountId is not a positive integer',
     (accountId) => {
       try {
-        const ticketService = new TicketService();
         ticketService.purchaseTickets(accountId);
       } catch (error) {
         expect(error).toBeInstanceOf(InvalidPurchaseException);
@@ -26,7 +33,6 @@ describe('TicketService', () => {
   );
 
   it('throws error when no ticket type request is made', () => {
-    const ticketService = new TicketService();
     try {
       ticketService.purchaseTickets(1);
     } catch (error) {
