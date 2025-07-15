@@ -7,6 +7,9 @@ import TicketPaymentService from '../thirdparty/paymentgateway/TicketPaymentServ
 
 export default class TicketService {
   #requestId;
+  #seatReservationService = new SeatReservationService();
+  #paymentService = new TicketPaymentService();
+  static #ADULT_TICKET_COST = 25;
 
   purchaseTickets(accountId, ...ticketTypeRequests) {
     this.#requestId = randomUUID();
@@ -15,15 +18,11 @@ export default class TicketService {
 
     this.#validateTicketTypeRequest(ticketTypeRequests);
 
-    const seatReservationService = new SeatReservationService();
     const noOfAdults = ticketTypeRequests[0].getNoOfTickets();
-    seatReservationService.reserveSeat(accountId, noOfAdults);
-    this.#log().info('Seats reserved.', { seats_reserved: noOfAdults });
 
-    const ticketPaymentService = new TicketPaymentService();
-    const cost = noOfAdults * 25;
-    ticketPaymentService.makePayment(accountId, cost);
-    this.#log().info('Payment made.', { cost });
+    this.#reserveSeats(accountId, noOfAdults);
+
+    this.#makePayment(accountId, noOfAdults);
   }
 
   #validateAccountId = (accountId) => {
@@ -53,6 +52,17 @@ export default class TicketService {
         'Ticket type request is not recognised.',
       );
     }
+  };
+
+  #reserveSeats = (accountId, numberOfTickets) => {
+    this.#seatReservationService.reserveSeat(accountId, numberOfTickets);
+    this.#log().info('Seats reserved.', { seats_reserved: numberOfTickets });
+  };
+
+  #makePayment = (accountId, numberOfTickets) => {
+    const cost = numberOfTickets * TicketService.#ADULT_TICKET_COST;
+    this.#paymentService.makePayment(accountId, cost);
+    this.#log().info('Payment made.', { cost });
   };
 
   #log = () => {
