@@ -22,6 +22,7 @@ export default class TicketService {
     const ticketTab = {
       ADULT: 0,
       CHILD: 0,
+      INFANT: 0,
     };
     ticketTypeRequests.forEach((request) => {
       const type = request.getTicketType();
