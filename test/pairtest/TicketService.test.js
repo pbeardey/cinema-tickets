@@ -197,4 +197,19 @@ describe('TicketService', () => {
       expectedSeatsAndPayment(accountId, seatCount, cost);
     },
   );
+
+  it('throws error when no adult tickets are requested', () => {
+    const { requests } = generate(0, 1);
+
+    try {
+      ticketService.purchaseTickets(1, ...requests);
+    } catch (error) {
+      expect(error).toBeInstanceOf(InvalidPurchaseException);
+      expect(error.message).toEqual(
+        'A minimum of one adult ticket is required',
+      );
+      expectLog('error')('No adult ticket was requested');
+    }
+    expect.assertions(3);
+  });
 });
