@@ -24,4 +24,22 @@ describe('TicketService', () => {
       expect.assertions(3);
     },
   );
+
+  it('throws error when no ticket type request is made', () => {
+    const ticketService = new TicketService();
+    try {
+      ticketService.purchaseTickets(1);
+    } catch (error) {
+      expect(error).toBeInstanceOf(InvalidPurchaseException);
+      expect(error.message).toEqual(
+        'A least one ticket type must be requested.',
+      );
+      expect(winston.mockLogger).toHaveBeenCalledWith({
+        level: 'error',
+        message: 'Ticket type request is missing.',
+        request_id: 'some-request-id',
+      });
+    }
+    expect.assertions(3);
+  });
 });
