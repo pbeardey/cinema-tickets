@@ -48,4 +48,19 @@ describe('TicketService', () => {
     }
     expect.assertions(3);
   });
+
+  it('throws error when ticket type request is not of type ticketTypeRequest', () => {
+    try {
+      ticketService.purchaseTickets(1, {});
+    } catch (error) {
+      expect(error).toBeInstanceOf(InvalidPurchaseException);
+      expect(error.message).toEqual('Ticket type request is not recognised.');
+      expect(winston.mockLogger).toHaveBeenCalledWith({
+        level: 'error',
+        message: 'Ticket type request is not of type ticketTypeRequest.',
+        request_id: 'some-request-id',
+      });
+    }
+    expect.assertions(3);
+  });
 });
