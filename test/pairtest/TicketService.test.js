@@ -69,17 +69,23 @@ describe('TicketService', () => {
     expect.assertions(3);
   });
 
-  it('reserves one seat for one adult ticket request', () => {
-    const adultTicketRequest = new TicketTypeRequest('ADULT', 1);
+  it.each([
+    [1, 2],
+    [2, 3],
+  ])(
+    'with account id %d, reserves %d seat(s) for adult ticket request',
+    (accountId, noOfAdults) => {
+      const adultTicketRequest = new TicketTypeRequest('ADULT', noOfAdults);
 
-    ticketService.purchaseTickets(1, adultTicketRequest);
+      ticketService.purchaseTickets(accountId, adultTicketRequest);
 
-    expect(mockReserveSeat).toHaveBeenCalledWith(1, 1);
-    expect(winston.mockLogger).toHaveBeenCalledWith({
-      level: 'info',
-      message: 'Seats reserved.',
-      request_id: 'some-request-id',
-      seats_reserved: 1,
-    });
-  });
+      expect(mockReserveSeat).toHaveBeenCalledWith(accountId, noOfAdults);
+      expect(winston.mockLogger).toHaveBeenCalledWith({
+        level: 'info',
+        message: 'Seats reserved.',
+        request_id: 'some-request-id',
+        seats_reserved: noOfAdults,
+      });
+    },
+  );
 });
