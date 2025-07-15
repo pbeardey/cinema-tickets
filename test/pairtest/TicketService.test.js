@@ -187,6 +187,7 @@ describe('TicketService', () => {
   it.each([
     [1, 3, 2, 1],
     [2, 10, 8, 7],
+    [3, 4, 2, 4],
   ])(
     'reserves seats and makes payment for adult, child and infant requests',
     (accountId, adult, child, infant) => {
