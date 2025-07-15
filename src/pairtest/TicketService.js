@@ -18,7 +18,10 @@ export default class TicketService {
 
     this.#validateTicketTypeRequest(ticketTypeRequests);
 
-    const noOfAdults = ticketTypeRequests[0].getNoOfTickets();
+    const noOfAdults = ticketTypeRequests.reduce(
+      (acc, request) => acc + request.getNoOfTickets(),
+      0,
+    );
 
     this.#reserveSeats(accountId, noOfAdults);
 
