@@ -228,4 +228,17 @@ describe('TicketService', () => {
     }
     expect.assertions(3);
   });
+
+  it('throws error when more than 25 tickets are requested', () => {
+    const { requests } = generate(10, 10, 6);
+
+    try {
+      ticketService.purchaseTickets(1, ...requests);
+    } catch (error) {
+      expect(error).toBeInstanceOf(InvalidPurchaseException);
+      expect(error.message).toEqual('A maximum of 25 tickets are permitted.');
+      expectLog('error')('More than 25 tickets were requested.');
+    }
+    expect.assertions(3);
+  });
 });
