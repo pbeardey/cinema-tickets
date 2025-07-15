@@ -206,9 +206,24 @@ describe('TicketService', () => {
     } catch (error) {
       expect(error).toBeInstanceOf(InvalidPurchaseException);
       expect(error.message).toEqual(
-        'A minimum of one adult ticket is required',
+        'A minimum of one adult ticket is required.',
       );
-      expectLog('error')('No adult ticket was requested');
+      expectLog('error')('No adult ticket was requested.');
+    }
+    expect.assertions(3);
+  });
+
+  it('throws error when more infants than adult tickets are requested', () => {
+    const { requests } = generate(1, 0, 2);
+
+    try {
+      ticketService.purchaseTickets(1, ...requests);
+    } catch (error) {
+      expect(error).toBeInstanceOf(InvalidPurchaseException);
+      expect(error.message).toEqual(
+        'A minimum of one adult ticket per infant ticket is required.',
+      );
+      expectLog('error')('More adults than infants were requested.');
     }
     expect.assertions(3);
   });
