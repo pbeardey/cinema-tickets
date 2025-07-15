@@ -14,6 +14,23 @@ const mockMakePayment = jest
   .spyOn(TicketPaymentService.prototype, 'makePayment')
   .mockImplementation(() => jest.fn());
 
+const expectLog = (level = 'info') => {
+  const request_id = 'some-request-id';
+  return (message, extras = {}, nth) => {
+    const expected = {
+      level,
+      message,
+      request_id,
+      ...extras,
+    };
+    if (nth) {
+      expect(winston.mockLogger).toHaveBeenNthCalledWith(nth, expected);
+    } else {
+      expect(winston.mockLogger).toHaveBeenCalledWith(expected);
+    }
+  };
+};
+
 describe('TicketService', () => {
   let ticketService;
   beforeEach(() => {
@@ -31,11 +48,9 @@ describe('TicketService', () => {
       } catch (error) {
         expect(error).toBeInstanceOf(InvalidPurchaseException);
         expect(error.message).toEqual('Account Id must be a positive integer.');
-        expect(winston.mockLogger).toHaveBeenCalledWith({
-          level: 'error',
-          message: 'Account Id provided was not an integer greater than 0.',
-          request_id: 'some-request-id',
-        });
+        expectLog('error')(
+          'Account Id provided was not an integer greater than 0.',
+        );
       }
       expect.assertions(3);
     },
@@ -49,11 +64,7 @@ describe('TicketService', () => {
       expect(error.message).toEqual(
         'A least one ticket type must be requested.',
       );
-      expect(winston.mockLogger).toHaveBeenCalledWith({
-        level: 'error',
-        message: 'Ticket type request is missing.',
-        request_id: 'some-request-id',
-      });
+      expectLog('error')('Ticket type request is missing.');
     }
     expect.assertions(3);
   });
@@ -64,11 +75,9 @@ describe('TicketService', () => {
     } catch (error) {
       expect(error).toBeInstanceOf(InvalidPurchaseException);
       expect(error.message).toEqual('Ticket type request is not recognised.');
-      expect(winston.mockLogger).toHaveBeenCalledWith({
-        level: 'error',
-        message: 'Ticket type request is not of type ticketTypeRequest.',
-        request_id: 'some-request-id',
-      });
+      expectLog('error')(
+        'Ticket type request is not of type ticketTypeRequest.',
+      );
     }
     expect.assertions(3);
   });
@@ -84,12 +93,7 @@ describe('TicketService', () => {
       ticketService.purchaseTickets(accountId, adultTicketRequest);
 
       expect(mockReserveSeat).toHaveBeenCalledWith(accountId, noOfAdults);
-      expect(winston.mockLogger).toHaveBeenCalledWith({
-        level: 'info',
-        message: 'Seats reserved.',
-        request_id: 'some-request-id',
-        seats_reserved: noOfAdults,
-      });
+      expectLog()('Seats reserved.', { seats_reserved: noOfAdults });
     },
   );
 
@@ -104,19 +108,10 @@ describe('TicketService', () => {
       ticketService.purchaseTickets(accountId, adultTicketRequest);
 
       expect(mockReserveSeat).toHaveBeenCalledWith(accountId, noOfAdults);
-      expect(winston.mockLogger).toHaveBeenNthCalledWith(1, {
-        level: 'info',
-        message: 'Seats reserved.',
-        request_id: 'some-request-id',
-        seats_reserved: noOfAdults,
-      });
+      expectLog()('Seats reserved.', { seats_reserved: noOfAdults }, 1);
+
       expect(mockMakePayment).toHaveBeenCalledWith(accountId, expectedCost);
-      expect(winston.mockLogger).toHaveBeenNthCalledWith(2, {
-        level: 'info',
-        message: 'Payment made.',
-        request_id: 'some-request-id',
-        cost: expectedCost,
-      });
+      expectLog()('Payment made.', { cost: expectedCost }, 2);
     },
   );
 });
