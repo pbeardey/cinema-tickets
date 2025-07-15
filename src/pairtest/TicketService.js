@@ -15,8 +15,9 @@ export default class TicketService {
     this.#validateTicketTypeRequest(ticketTypeRequests);
 
     const seatReservationService = new SeatReservationService();
-    seatReservationService.reserveSeat(1, 1);
-    this.#log().info('Seats reserved.', { seats_reserved: 1 });
+    const noOfAdults = ticketTypeRequests[0].getNoOfTickets();
+    seatReservationService.reserveSeat(accountId, noOfAdults);
+    this.#log().info('Seats reserved.', { seats_reserved: noOfAdults });
   }
 
   #validateAccountId = (accountId) => {
