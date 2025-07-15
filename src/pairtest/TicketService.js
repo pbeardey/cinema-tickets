@@ -29,6 +29,13 @@ export default class TicketService {
       ticketTab[type] = ticketTab[type] + request.getNoOfTickets();
     });
 
+    if (ticketTab.ADULT < 1) {
+      this.#log().error('No adult ticket was requested');
+      throw new InvalidPurchaseException(
+        'A minimum of one adult ticket is required',
+      );
+    }
+
     this.#reserveSeats(accountId, ticketTab);
 
     this.#makePayment(accountId, ticketTab);
