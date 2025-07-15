@@ -2,8 +2,13 @@ import TicketService from '../../src/pairtest/TicketService.js';
 import InvalidPurchaseException from '../../src/pairtest/lib/InvalidPurchaseException';
 import winston from 'winston';
 import crypto from 'crypto';
+import TicketTypeRequest from '../../src/pairtest/lib/TicketTypeRequest';
+import SeatReservationService from '../../src/thirdparty/seatbooking/SeatReservationService';
 
 jest.spyOn(crypto, 'randomUUID').mockReturnValue('some-request-id');
+const mockReserveSeat = jest
+  .spyOn(SeatReservationService.prototype, 'reserveSeat')
+  .mockImplementation(() => jest.fn());
 
 describe('TicketService', () => {
   let ticketService;
@@ -62,5 +67,19 @@ describe('TicketService', () => {
       });
     }
     expect.assertions(3);
+  });
+
+  it('reserves one seat for one adult ticket request', () => {
+    const adultTicketRequest = new TicketTypeRequest('ADULT', 1);
+
+    ticketService.purchaseTickets(1, adultTicketRequest);
+
+    expect(mockReserveSeat).toHaveBeenCalledWith(1, 1);
+    expect(winston.mockLogger).toHaveBeenCalledWith({
+      level: 'info',
+      message: 'Seats reserved.',
+      request_id: 'some-request-id',
+      seats_reserved: 1,
+    });
   });
 });
