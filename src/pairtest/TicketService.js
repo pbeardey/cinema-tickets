@@ -2,6 +2,7 @@ import TicketTypeRequest from './lib/TicketTypeRequest.js';
 import InvalidPurchaseException from './lib/InvalidPurchaseException.js';
 import logger from '../lib/logger';
 import { randomUUID } from 'crypto';
+import SeatReservationService from '../thirdparty/seatbooking/SeatReservationService';
 
 export default class TicketService {
   #requestId;
@@ -29,23 +30,33 @@ export default class TicketService {
       );
     }
 
-    this.#log().error('Ticket type request is not of type ticketTypeRequest.');
-    throw new InvalidPurchaseException(
-      'Ticket type request is not recognised.',
-    );
+    if (!(this.#ticketTypeRequests[0] instanceof TicketTypeRequest)) {
+      this.#log().error(
+        'Ticket type request is not of type ticketTypeRequest.',
+      );
+      throw new InvalidPurchaseException(
+        'Ticket type request is not recognised.',
+      );
+    }
+
+    const seatReservationService = new SeatReservationService();
+    seatReservationService.reserveSeat(1, 1);
+    this.#log().info('Seats reserved.', { seats_reserved: 1 });
   }
 
   #log = () => {
-    const _logger = (level, message) => {
+    const _logger = (level, message, extras) => {
       logger.log({
         level,
         message,
         request_id: this.#requestId,
+        ...extras,
       });
     };
 
     return {
-      error: (message) => _logger('error', message),
+      error: (message, extras = {}) => _logger('error', message, extras),
+      info: (message, extras) => _logger('info', message, extras),
     };
   };
 }
