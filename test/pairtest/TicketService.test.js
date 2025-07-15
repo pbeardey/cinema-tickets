@@ -161,4 +161,23 @@ describe('TicketService', () => {
     expect(mockMakePayment).toHaveBeenCalledWith(1, 40);
     expectLog()('Payment made.', { cost: 40 }, 2);
   });
+
+  it('reserves seats and makes payment for adult, child and infant requests', () => {
+    const adultTicketRequest = new TicketTypeRequest('ADULT', 2);
+    const childTicketRequest = new TicketTypeRequest('CHILD', 3);
+    const infantTicketRequest = new TicketTypeRequest('INFANT', 1);
+
+    ticketService.purchaseTickets(
+      1,
+      adultTicketRequest,
+      childTicketRequest,
+      infantTicketRequest,
+    );
+
+    expect(mockReserveSeat).toHaveBeenCalledWith(1, 6);
+    expectLog()('Seats reserved.', { seats_reserved: 6 }, 1);
+
+    expect(mockMakePayment).toHaveBeenCalledWith(1, 95);
+    expectLog()('Payment made.', { cost: 95 }, 2);
+  });
 });
