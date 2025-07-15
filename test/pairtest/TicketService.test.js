@@ -4,10 +4,14 @@ import winston from 'winston';
 import crypto from 'crypto';
 import TicketTypeRequest from '../../src/pairtest/lib/TicketTypeRequest';
 import SeatReservationService from '../../src/thirdparty/seatbooking/SeatReservationService';
+import TicketPaymentService from '../../src/thirdparty/paymentgateway/TicketPaymentService';
 
 jest.spyOn(crypto, 'randomUUID').mockReturnValue('some-request-id');
 const mockReserveSeat = jest
   .spyOn(SeatReservationService.prototype, 'reserveSeat')
+  .mockImplementation(() => jest.fn());
+const mockMakePayment = jest
+  .spyOn(TicketPaymentService.prototype, 'makePayment')
   .mockImplementation(() => jest.fn());
 
 describe('TicketService', () => {
@@ -88,4 +92,25 @@ describe('TicketService', () => {
       });
     },
   );
+
+  it('makes correct payment one adult ticket request', () => {
+    const adultTicketRequest = new TicketTypeRequest('ADULT', 1);
+
+    ticketService.purchaseTickets(1, adultTicketRequest);
+
+    expect(mockReserveSeat).toHaveBeenCalledWith(1, 1);
+    expect(winston.mockLogger).toHaveBeenNthCalledWith(1,{
+      level: 'info',
+      message: 'Seats reserved.',
+      request_id: 'some-request-id',
+      seats_reserved: 1,
+    });
+    expect(mockMakePayment).toHaveBeenCalledWith(1, 25);
+    expect(winston.mockLogger).toHaveBeenNthCalledWith(2,{
+      level: 'info',
+      message: 'Payment made.',
+      request_id: 'some-request-id',
+      cost: 25,
+    });
+  });
 });
