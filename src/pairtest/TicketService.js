@@ -21,19 +21,7 @@ export default class TicketService {
 
     const ticketTally = this.#summariseRequests(ticketTypeRequests);
 
-    if (ticketTally.ADULT < 1) {
-      this.#log().error('No adult ticket was requested.');
-      throw new InvalidPurchaseException(
-        'A minimum of one adult ticket is required.',
-      );
-    }
-
-    if (ticketTally.ADULT < ticketTally.INFANT) {
-      this.#log().error('More adults than infants were requested.');
-      throw new InvalidPurchaseException(
-        'A minimum of one adult ticket per infant ticket is required.',
-      );
-    }
+    this.#validateTicketTally(ticketTally);
 
     this.#reserveSeats(accountId, ticketTally);
 
@@ -83,6 +71,22 @@ export default class TicketService {
     });
 
     return ticketTally;
+  };
+
+  #validateTicketTally = (ticketTally) => {
+    if (ticketTally.ADULT < 1) {
+      this.#log().error('No adult ticket was requested.');
+      throw new InvalidPurchaseException(
+        'A minimum of one adult ticket is required.',
+      );
+    }
+
+    if (ticketTally.ADULT < ticketTally.INFANT) {
+      this.#log().error('More adults than infants were requested.');
+      throw new InvalidPurchaseException(
+        'A minimum of one adult ticket per infant ticket is required.',
+      );
+    }
   };
 
   #reserveSeats = (accountId, ticketTab) => {
