@@ -44,14 +44,16 @@ export default class TicketService {
       );
     }
 
-    if (!(ticketTypeRequests[0] instanceof TicketTypeRequest)) {
-      this.#log().error(
-        'Ticket type request is not of type ticketTypeRequest.',
-      );
-      throw new InvalidPurchaseException(
-        'Ticket type request is not recognised.',
-      );
-    }
+    ticketTypeRequests.forEach((request) => {
+      if (!(request instanceof TicketTypeRequest)) {
+        this.#log().error(
+          'Ticket type request is not of type ticketTypeRequest.',
+        );
+        throw new InvalidPurchaseException(
+          'Ticket type request is not recognised.',
+        );
+      }
+    });
   };
 
   #reserveSeats = (accountId, numberOfTickets) => {
