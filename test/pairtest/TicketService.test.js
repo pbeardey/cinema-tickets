@@ -31,7 +31,13 @@ const expectLog = (level = 'info') => {
   };
 };
 
-const generateRequests = (...params) => {
+const TICKET_COST = new Map([
+  ['ADULT', 25],
+  ['CHILD', 15],
+  ['INFANT', 0],
+]);
+
+const generate = (...params) => {
   const type = ['ADULT', 'CHILD', 'INFANT'];
   const requests = [];
   params.forEach((param, index) => {
@@ -40,7 +46,17 @@ const generateRequests = (...params) => {
       requests.push(request);
     }
   });
-  return requests;
+
+  const seatCount = params.reduce((acc, cur) => acc + cur, 0);
+  const cost = params.reduce((acc, cur, index) => {
+    return acc + cur * TICKET_COST.get(type[index]);
+  }, 0);
+
+  return {
+    requests,
+    seatCount,
+    cost,
+  };
 };
 
 const expectedSeatsAndPayment = (accountId, seatCount, cost) => {
@@ -119,8 +135,8 @@ describe('TicketService', () => {
   );
 
   it.each([
-    [50, 2, 1],
-    [75, 3, 2],
+    [2 * TICKET_COST.get('ADULT'), 2, 1],
+    [3 * TICKET_COST.get('ADULT'), 3, 2],
   ])(
     'makes payment for %d for %d adults with account id %d',
     (expectedCost, noOfAdults, accountId) => {
@@ -158,18 +174,27 @@ describe('TicketService', () => {
 
     ticketService.purchaseTickets(1, adultTicketRequest, adultTicketRequest);
 
-    expectedSeatsAndPayment(1, 2, 50);
+    expectedSeatsAndPayment(1, 2, TICKET_COST.get('ADULT') * 2);
   });
 
   it('reserves seats and makes payment for adult and child requests', () => {
-    ticketService.purchaseTickets(1, ...generateRequests(1, 1));
+    const { requests, seatCount, cost } = generate(1, 1);
+    ticketService.purchaseTickets(1, ...requests);
 
-    expectedSeatsAndPayment(1, 2, 40);
+    expectedSeatsAndPayment(1, seatCount, cost);
   });
 
-  it('reserves seats and makes payment for adult, child and infant requests', () => {
-    ticketService.purchaseTickets(1, ...generateRequests(2, 3, 1));
+  it.each([
+    [1, 3, 2, 1],
+    [2, 10, 8, 7],
+  ])(
+    'reserves seats and makes payment for adult, child and infant requests',
+    (accountId, adult, child, infant) => {
+      const { requests, seatCount, cost } = generate(adult, child, infant);
 
-    expectedSeatsAndPayment(1, 6, 95);
-  });
+      ticketService.purchaseTickets(accountId, ...requests);
+
+      expectedSeatsAndPayment(accountId, seatCount, cost);
+    },
+  );
 });
