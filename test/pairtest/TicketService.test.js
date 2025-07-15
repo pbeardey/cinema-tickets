@@ -40,6 +40,7 @@ describe('TicketService', () => {
     jest.clearAllMocks();
   });
 
+  // single request
   it.each([['x'], [1.5], [-2], [true]])(
     'throws error when accountId is not a positive integer',
     (accountId) => {
@@ -114,4 +115,25 @@ describe('TicketService', () => {
       expectLog()('Payment made.', { cost: expectedCost }, 2);
     },
   );
+
+  // multiple requests
+  it('throws error if any request is not of type ticketTypeRequest', () => {
+    const adultTicketRequest = new TicketTypeRequest('ADULT', 1);
+    const invalidTicketRequest = { type: 'ADULT', number: 2 };
+
+    try {
+      ticketService.purchaseTickets(
+        1,
+        adultTicketRequest,
+        invalidTicketRequest,
+      );
+    } catch (error) {
+      expect(error).toBeInstanceOf(InvalidPurchaseException);
+      expect(error.message).toEqual('Ticket type request is not recognised.');
+      expectLog('error')(
+        'Ticket type request is not of type ticketTypeRequest.',
+      );
+    }
+    expect.assertions(3);
+  });
 });
