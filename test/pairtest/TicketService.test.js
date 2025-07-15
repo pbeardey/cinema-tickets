@@ -93,24 +93,30 @@ describe('TicketService', () => {
     },
   );
 
-  it('makes correct payment one adult ticket request', () => {
-    const adultTicketRequest = new TicketTypeRequest('ADULT', 1);
+  it.each([
+    [50, 2, 1],
+    [75, 3, 2],
+  ])(
+    'makes payment for %d for %d adults with account id %d',
+    (expectedCost, noOfAdults, accountId) => {
+      const adultTicketRequest = new TicketTypeRequest('ADULT', noOfAdults);
 
-    ticketService.purchaseTickets(1, adultTicketRequest);
+      ticketService.purchaseTickets(accountId, adultTicketRequest);
 
-    expect(mockReserveSeat).toHaveBeenCalledWith(1, 1);
-    expect(winston.mockLogger).toHaveBeenNthCalledWith(1,{
-      level: 'info',
-      message: 'Seats reserved.',
-      request_id: 'some-request-id',
-      seats_reserved: 1,
-    });
-    expect(mockMakePayment).toHaveBeenCalledWith(1, 25);
-    expect(winston.mockLogger).toHaveBeenNthCalledWith(2,{
-      level: 'info',
-      message: 'Payment made.',
-      request_id: 'some-request-id',
-      cost: 25,
-    });
-  });
+      expect(mockReserveSeat).toHaveBeenCalledWith(accountId, noOfAdults);
+      expect(winston.mockLogger).toHaveBeenNthCalledWith(1, {
+        level: 'info',
+        message: 'Seats reserved.',
+        request_id: 'some-request-id',
+        seats_reserved: noOfAdults,
+      });
+      expect(mockMakePayment).toHaveBeenCalledWith(accountId, expectedCost);
+      expect(winston.mockLogger).toHaveBeenNthCalledWith(2, {
+        level: 'info',
+        message: 'Payment made.',
+        request_id: 'some-request-id',
+        cost: expectedCost,
+      });
+    },
+  );
 });
