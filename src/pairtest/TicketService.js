@@ -19,26 +19,18 @@ export default class TicketService {
 
     this.#validateTicketTypeRequest(ticketTypeRequests);
 
-    const ticketTab = {
-      ADULT: 0,
-      CHILD: 0,
-      INFANT: 0,
-    };
-    ticketTypeRequests.forEach((request) => {
-      const type = request.getTicketType();
-      ticketTab[type] = ticketTab[type] + request.getNoOfTickets();
-    });
+    const ticketTally = this.#summariseRequests(ticketTypeRequests);
 
-    if (ticketTab.ADULT < 1) {
+    if (ticketTally.ADULT < 1) {
       this.#log().error('No adult ticket was requested');
       throw new InvalidPurchaseException(
         'A minimum of one adult ticket is required',
       );
     }
 
-    this.#reserveSeats(accountId, ticketTab);
+    this.#reserveSeats(accountId, ticketTally);
 
-    this.#makePayment(accountId, ticketTab);
+    this.#makePayment(accountId, ticketTally);
   }
 
   #validateAccountId = (accountId) => {
@@ -70,6 +62,20 @@ export default class TicketService {
         );
       }
     });
+  };
+
+  #summariseRequests = (requests) => {
+    const ticketTally = {
+      ADULT: 0,
+      CHILD: 0,
+      INFANT: 0,
+    };
+    requests.forEach((request) => {
+      const type = request.getTicketType();
+      ticketTally[type] = ticketTally[type] + request.getNoOfTickets();
+    });
+
+    return ticketTally;
   };
 
   #reserveSeats = (accountId, ticketTab) => {
