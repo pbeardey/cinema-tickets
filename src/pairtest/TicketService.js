@@ -87,6 +87,15 @@ export default class TicketService {
         'A minimum of one adult ticket per infant ticket is required.',
       );
     }
+
+    const totalTickets =
+      ticketTally.ADULT + ticketTally.CHILD + ticketTally.INFANT;
+    if (totalTickets > 25) {
+      this.#log().error('More than 25 tickets were requested.');
+      throw new InvalidPurchaseException(
+        'A maximum of 25 tickets are permitted.',
+      );
+    }
   };
 
   #reserveSeats = (accountId, ticketTab) => {
