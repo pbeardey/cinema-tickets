@@ -10,6 +10,7 @@ export default class TicketService {
   #seatReservationService = new SeatReservationService();
   #paymentService = new TicketPaymentService();
   static #ADULT_TICKET_COST = 25;
+  static #CHILD_TICKET_COST = 15;
 
   purchaseTickets(accountId, ...ticketTypeRequests) {
     this.#requestId = randomUUID();
@@ -18,14 +19,18 @@ export default class TicketService {
 
     this.#validateTicketTypeRequest(ticketTypeRequests);
 
-    const noOfAdults = ticketTypeRequests.reduce(
-      (acc, request) => acc + request.getNoOfTickets(),
-      0,
-    );
+    const ticketTab = {
+      ADULT: 0,
+      CHILD: 0,
+    };
+    ticketTypeRequests.forEach((request) => {
+      const type = request.getTicketType();
+      ticketTab[type] = ticketTab[type] + request.getNoOfTickets();
+    });
 
-    this.#reserveSeats(accountId, noOfAdults);
+    this.#reserveSeats(accountId, ticketTab);
 
-    this.#makePayment(accountId, noOfAdults);
+    this.#makePayment(accountId, ticketTab);
   }
 
   #validateAccountId = (accountId) => {
@@ -59,13 +64,19 @@ export default class TicketService {
     });
   };
 
-  #reserveSeats = (accountId, numberOfTickets) => {
-    this.#seatReservationService.reserveSeat(accountId, numberOfTickets);
-    this.#log().info('Seats reserved.', { seats_reserved: numberOfTickets });
+  #reserveSeats = (accountId, ticketTab) => {
+    let totalSeats = 0;
+    for (const type in ticketTab) {
+      totalSeats = totalSeats + ticketTab[type];
+    }
+    this.#seatReservationService.reserveSeat(accountId, totalSeats);
+    this.#log().info('Seats reserved.', { seats_reserved: totalSeats });
   };
 
-  #makePayment = (accountId, numberOfTickets) => {
-    const cost = numberOfTickets * TicketService.#ADULT_TICKET_COST;
+  #makePayment = (accountId, ticketTab) => {
+    let cost =
+      ticketTab.ADULT * TicketService.#ADULT_TICKET_COST +
+      ticketTab.CHILD * TicketService.#CHILD_TICKET_COST;
     this.#paymentService.makePayment(accountId, cost);
     this.#log().info('Payment made.', { cost });
   };
