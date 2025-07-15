@@ -3,6 +3,7 @@ import InvalidPurchaseException from './lib/InvalidPurchaseException.js';
 import logger from '../lib/logger';
 import { randomUUID } from 'crypto';
 import SeatReservationService from '../thirdparty/seatbooking/SeatReservationService';
+import TicketPaymentService from "../thirdparty/paymentgateway/TicketPaymentService.js";
 
 export default class TicketService {
   #requestId;
@@ -18,6 +19,10 @@ export default class TicketService {
     const noOfAdults = ticketTypeRequests[0].getNoOfTickets();
     seatReservationService.reserveSeat(accountId, noOfAdults);
     this.#log().info('Seats reserved.', { seats_reserved: noOfAdults });
+
+    const ticketPaymentService = new TicketPaymentService();
+    ticketPaymentService.makePayment(1, 25);
+    this.#log().info('Payment made.', { cost: 25 });
   }
 
   #validateAccountId = (accountId) => {
