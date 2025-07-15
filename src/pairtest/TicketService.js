@@ -6,10 +6,12 @@ import { randomUUID } from 'crypto';
 export default class TicketService {
   #requestId;
   #accountId;
+  #ticketTypeRequests;
 
   purchaseTickets(accountId, ...ticketTypeRequests) {
     this.#requestId = randomUUID();
     this.#accountId = accountId;
+    this.#ticketTypeRequests = ticketTypeRequests;
 
     if (!Number.isInteger(this.#accountId) || this.#accountId < 1) {
       logger.log({
@@ -22,13 +24,24 @@ export default class TicketService {
       );
     }
 
+    if (this.#ticketTypeRequests.length === 0) {
+      logger.log({
+        level: 'error',
+        message: 'Ticket type request is missing.',
+        request_id: this.#requestId,
+      });
+      throw new InvalidPurchaseException(
+        'A least one ticket type must be requested.',
+      );
+    }
+
     logger.log({
       level: 'error',
-      message: 'Ticket type request is missing.',
+      message: 'Ticket type request is not of type ticketTypeRequest.',
       request_id: this.#requestId,
     });
     throw new InvalidPurchaseException(
-      'A least one ticket type must be requested.',
+      'Ticket type request is not recognised.',
     );
   }
 }
