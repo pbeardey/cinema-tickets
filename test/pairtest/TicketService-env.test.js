@@ -4,7 +4,14 @@ import SeatReservationService from '../../src/thirdparty/seatbooking/SeatReserva
 import TicketPaymentService from '../../src/thirdparty/paymentgateway/TicketPaymentService';
 import TicketService from '../../src/pairtest/TicketService';
 
-const originalEnv = setEnv.originalEnv;
+let originalEnv;
+beforeAll(() => {
+  originalEnv = setEnv.originalEnv;
+});
+
+afterAll(() => {
+  resetEnv(originalEnv);
+});
 
 const spyReserveSeat = jest
   .spyOn(SeatReservationService.prototype, 'reserveSeat')
@@ -35,5 +42,3 @@ describe('integration-test', () => {
     expect(spyMakePayment).toHaveBeenCalledWith(accountId, expectedCost);
   });
 });
-
-resetEnv(originalEnv);
