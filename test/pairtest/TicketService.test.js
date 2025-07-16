@@ -9,26 +9,20 @@ import TicketPaymentService from '../../src/thirdparty/paymentgateway/TicketPaym
 jest.spyOn(crypto, 'randomUUID').mockReturnValue('some-request-id');
 const mockReserveSeat = jest
   .spyOn(SeatReservationService.prototype, 'reserveSeat')
-  .mockImplementation(() => jest.fn());
+  .mockImplementation(jest.fn());
 const mockMakePayment = jest
   .spyOn(TicketPaymentService.prototype, 'makePayment')
-  .mockImplementation(() => jest.fn());
+  .mockImplementation(jest.fn());
 
-const expectLog = (level = 'info') => {
-  const request_id = 'some-request-id';
-  return (message, extras = {}, nth) => {
-    const expected = {
-      level,
-      message,
-      request_id,
-      ...extras,
-    };
-    if (nth) {
-      expect(winston.mockLogger).toHaveBeenNthCalledWith(nth, expected);
-    } else {
-      expect(winston.mockLogger).toHaveBeenCalledWith(expected);
-    }
-  };
+const { mockLogger } = winston;
+
+const expectLog = (level, message, extras = {}) => {
+  expect(mockLogger).toHaveBeenCalledWith({
+    level,
+    message,
+    request_id: 'some-request-id',
+    ...extras,
+  });
 };
 
 const TICKET_COST = new Map([
@@ -62,15 +56,16 @@ const generate = (...params) => {
 const expectError = (error, errorMessage, logMessage) => {
   expect(error).toBeInstanceOf(InvalidPurchaseException);
   expect(error.message).toEqual(errorMessage);
-  expectLog('error')(logMessage);
+  expectLog('error', logMessage);
 };
 
 const expectedSeatsAndPayment = (accountId, seatCount, cost) => {
   expect(mockReserveSeat).toHaveBeenCalledWith(accountId, seatCount);
-  expectLog()('Seats reserved.', { seats_reserved: seatCount }, 1);
+  expectLog('info', 'Seats reserved.', { seats_reserved: seatCount });
 
   expect(mockMakePayment).toHaveBeenCalledWith(accountId, cost);
-  expectLog()('Payment made.', { cost: cost }, 2);
+  expectLog('info', 'Payment made.', { cost: cost });
+  expect(mockLogger).toHaveBeenCalledTimes(2);
 };
 
 describe('TicketService', () => {
@@ -82,7 +77,6 @@ describe('TicketService', () => {
     jest.clearAllMocks();
   });
 
-  // single request
   it.each([['x'], [1.5], [-2], [true]])(
     'throws error when accountId is not a positive integer',
     (accountId) => {
@@ -136,7 +130,7 @@ describe('TicketService', () => {
       ticketService.purchaseTickets(accountId, adultTicketRequest);
 
       expect(mockReserveSeat).toHaveBeenCalledWith(accountId, noOfAdults);
-      expectLog()('Seats reserved.', { seats_reserved: noOfAdults });
+      expectLog('info', 'Seats reserved.', { seats_reserved: noOfAdults });
     },
   );
 
@@ -154,7 +148,6 @@ describe('TicketService', () => {
     },
   );
 
-  // multiple requests
   it('throws error if any request is not of type ticketTypeRequest', () => {
     const adultTicketRequest = new TicketTypeRequest('ADULT', 1);
     const invalidTicketRequest = { type: 'ADULT', number: 2 };
@@ -193,7 +186,7 @@ describe('TicketService', () => {
   it.each([
     [1, 3, 2, 1],
     [2, 10, 8, 7],
-    [3, 4, 2, 4],
+    [30023, 4, 2, 4],
   ])(
     'reserves seats and makes payment for adult, child and infant requests',
     (accountId, adult, child, infant) => {
