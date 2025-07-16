@@ -14,7 +14,6 @@ export default class TicketService {
   static #TICKET_COST = new Map([
     ['ADULT', process.env.TICKET_COST_ADULT || 25],
     ['CHILD', process.env.TICKET_COST_CHILD || 15],
-    // Stryker disable next-line all
     ['INFANT', process.env.TICKET_COST_INFANT || 0],
   ]);
 
