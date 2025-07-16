@@ -9,8 +9,14 @@ export default class TicketService {
   #requestId;
   #seatReservationService = new SeatReservationService();
   #paymentService = new TicketPaymentService();
-  static #ADULT_TICKET_COST = 25;
-  static #CHILD_TICKET_COST = 15;
+
+  static #MAX_TICKETS = 25;
+  static #TICKET_COST = new Map([
+    ['ADULT', process.env.TICKET_COST_ADULT || 25],
+    ['CHILD', process.env.TICKET_COST_CHILD || 15],
+    // Stryker disable next-line all
+    ['INFANT', process.env.TICKET_COST_INFANT || 0],
+  ]);
 
   purchaseTickets(accountId, ...ticketTypeRequests) {
     this.#requestId = randomUUID();
@@ -92,7 +98,7 @@ export default class TicketService {
     for (const type in ticketTally) {
       totalTickets = totalTickets + ticketTally[type];
     }
-    if (totalTickets > 25) {
+    if (totalTickets > TicketService.#MAX_TICKETS) {
       this.#log().error('More than 25 tickets were requested.');
       throw new InvalidPurchaseException(
         'A maximum of 25 tickets are permitted.',
@@ -109,10 +115,11 @@ export default class TicketService {
     this.#log().info('Seats reserved.', { seats_reserved: totalSeats });
   };
 
-  #makePayment = (accountId, ticketTab) => {
-    let cost =
-      ticketTab.ADULT * TicketService.#ADULT_TICKET_COST +
-      ticketTab.CHILD * TicketService.#CHILD_TICKET_COST;
+  #makePayment = (accountId, ticketTally) => {
+    let cost = 0;
+    for (const type in ticketTally) {
+      cost = cost + ticketTally[type] * TicketService.#TICKET_COST.get(type);
+    }
     this.#paymentService.makePayment(accountId, cost);
     this.#log().info('Payment made.', { cost });
   };
