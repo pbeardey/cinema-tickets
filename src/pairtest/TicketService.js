@@ -17,6 +17,12 @@ export default class TicketService {
     ['INFANT', process.env.TICKET_COST_INFANT || 0],
   ]);
 
+  /**
+   * A method to purchase tickets by reserving seats and making payment
+   * @param {integer} accountId - the accountId of the user, e.g. 20034
+   * @param {TicketTypeRequest} ticketTypeRequests - the ticket requests of the user
+   * @throws {InvalidPurchaseException} - on errors
+   */
   purchaseTickets(accountId, ...ticketTypeRequests) {
     this.#requestId = randomUUID();
 
