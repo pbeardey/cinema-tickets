@@ -15,13 +15,13 @@ afterAll(() => {
 
 const spyReserveSeat = jest
   .spyOn(SeatReservationService.prototype, 'reserveSeat')
-  .mockImplementation(() => jest.fn());
+  .mockImplementation(jest.fn());
 
 const spyMakePayment = jest
   .spyOn(TicketPaymentService.prototype, 'makePayment')
-  .mockImplementation(() => jest.fn());
+  .mockImplementation(jest.fn());
 
-describe('integration-test', () => {
+describe('test with env vars', () => {
   it('reserves seats and make payment successfully', () => {
     const accountId = 12;
     const expectedCost = 1400;
